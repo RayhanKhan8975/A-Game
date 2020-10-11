@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+<style type="text/css">
+	#myCanvas{
+		border: 3px solid grey;
+		background-color: black;
+background-image: -webkit-linear-gradient(black);  
+  }
+body div{
+	display: inline;
+}
+</style>
+<script type="text/javascript">
+//
+	var canvas, ctx;
+	var w, h, x, y;
+	var x1, x0, y1, y0;
+	var count = 0;
+	var lastTime;
+    var fire;
+	var fps;
+	var monster;
+	var delta;
+	var ballArray = [];
+  var missileArray = [];
+	var frameCount = 0;
+	var inputStates;
+	var frameCount;
+  var ball;
+	var grdFrenchFlag;
+	var timee ;
+	var ball;
+  var dead;
+	var ship = {
+	x: 120,
+	y: 220,
+	speed:100,
+	speedX:10,
+	speedY:10,
+	width:50,
+	height:30,
+	boundingCircleRadius: 17.5
+};
+var score = 0;
+
+var missile = {
+	x:ship.x-10,
+	y:ship.y-10,
+	 boundingCircleRadius: 15,
+  speed:1
+}
+
+window.onload = function init() {
+	game = new GF;
+	game.start();
+	canvas = document.querySelector('#myCanvas');
+	ctx = canvas.getContext('2d');
+	//canvas = document.querySelector('#myCanvas');
+	//	ctx = canvas.getContext('2d');
+		w = canvas.width;
+	 	h = canvas.height;
+   grdFrenchFlag = ctx.createLinearGradient(400,200,0,0);
+         
+    grdFrenchFlag.addColorStop((
+    0.14285714285714285714285714285714),"violet");
+  grdFrenchFlag.addColorStop(0.14285714285714285714285714285714*2,'Indigo');
+  grdFrenchFlag.addColorStop((
+    0.14285714285714285714285714285714)*3,'blue');
+  grdFrenchFlag.addColorStop((
+    0.14285714285714285714285714285714)*4,'Green');
+  grdFrenchFlag.addColorStop((
+    0.14285714285714285714285714285714)*5,'Yellow');
+  grdFrenchFlag.addColorStop((
+    0.14285714285714285714285714285714)*6,'Orange');
+  grdFrenchFlag.addColorStop((
+    0.14285714285714285714285714285714)*7,'red');
+   
+}
+   
+
+		var GF = function() {
+		var inputStates = {};
+        
+        createBalls(1)
+
+
+		var mainloop = function (time) {
+
+			measureFPS(time); 
+    
+      clearCanvas();
+
+			drawMyShip(ship.x, ship.y);
+  
+            updateshipPosition();
+           
+            walls()
+
+            updateMissile() 
+            
+            updateBalls(delta);
+
+			checkCollisions();
+
+      requestAnimationFrame(mainloop);
+			// body...
+		
+  }
+		var calculateDistance = function(delta,speed) {
+    	return(speed*delta)/1000
+    }
+
+
+   /* var update = function update() {
+  // clear the canvas
+  //ctx.clearRect(0, 0, w, h);
+  // for each ball in the array
+  for(var i=0; i < ballArray.length; i++) {
+  var ball = ballArray[i]; 
+    // 1) move the ball
+    ball.move();
+    // 2) test if the ball collides with a wall
+    testCollisionWithWalls(ball);
+    // 3) draw the ball
+    ball.draw();
+  }
+  // ask for a new frame of animation at 60f/s
+}*/
+/*
+function Ball(x, y, vx, vy, diameter,state) {
+  this.x = x;
+  this.y = y;
+  this.angle = angle;
+  this.v = v * 0.9;
+  this.radius = diameter/2;
+  this.state = state;
+  this.draw = function() {
+  	var monster = ctx.createLinearGradient(this.x-this.radius,this.y-this.radius,this.x+this.radius,this.y+this.radius);
+  	monster.addColorStop(0,"red");
+  	monster.addColorStop(0.5,"grey")
+ ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, 2*Math.PI);
+    ctx.fillStyle = monster;
+    ctx.fill();
+    ctx.beginPath()
+    ctx.arc(this.x, this.y, this.radius-(this.radius*1/4), 0,Math.PI);
+    ctx.strokeStyle = grdFrenchFlag;
+    ctx.stroke()
+
+    };
+  this.move = function() {
+    // add horizontal increment to the x pos
+    // add vertical increment to the y pos
+    this.x += this.vx;
+    this.y += this.vy;
+ };
+}
+*/
+function Ball(x, y, vx, vy, diameter, state) {
+  // property of each ball: a x and y position, speeds, radius
+  this.x = x;
+  this.y = y;
+  this.vx = vx;
+  this.vy = vy;
+  this.radius = diameter/2;
+  
+  this.state = state;
+  this.draw = function() {
+  var monster = ctx.createRadialGradient(this.x,this.y,this.radius,this.x,this.y,this.radius - 10);
+  //  monster.addColorStop(0,"red");
+    //monster.addColorStop(0.5,"grey")
+ monster.addColorStop((
+    0.14285714285714285714285714285714),"red");
+ //monster.addColorStop(0.14285714285714285714285714285714*2,'white');
+  monster.addColorStop((
+    0.14285714285714285714285714285714)*3,'orange');
+  monster.addColorStop((
+    0.14285714285714285714285714285714)*4,'darkred');
+  /*monster.addColorStop((
+   0.14285714285714285714285714285714)*5,'red');
+  monster.addColorStop((
+    0.14285714285714285714285714285714)*6,'brown  ');
+  monster.addColorStop((
+    0.14285714285714285714285714285714)*7,'red');
+   */
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, 2*Math.PI);
+    ctx.fillStyle = monster;
+    ctx.fill();
+  
+      ctx.arc(this.x, this.y, this.radius-(this.radius*1/4), 0,Math.PI);
+    ctx.strokeStyle = grdFrenchFlag;
+    ctx.stroke()
+
+  };
+  this.move = function() {
+    // add horizontal increment to the x pos
+    // add vertical increment to the y pos
+    this.x += this.vx;
+    this.y += this.vy;
+ };
+}
+
+function createBalls(numberOfBalls) {
+   var ball = new Ball(w*Math.random(),
+                        (h/4)*Math.random(),
+                        1 + Math.random()*30,
+                        1 + Math.random()*30,
+                        30,1);
+    
+  if (ball.state == 0) {
+    ballArray = ballArray.slice((ballArray.indexOf(ball)),(ballArray.indexOf(ball) + 1))
+  }
+  if (ball.state == 1) {
+
+  for (var i=0; i < numberOfBalls; i++) {
+   var ball = new Ball(w*Math.random(),
+                        (h/4)*Math.random(),
+              1 + Math.random()*8, // angle
+              1+ Math.random()*8,      // speed
+                        30,1);
+    
+    // Create a ball with random position and speed.
+    // You can change the radius
+    
+   // We add it in an array
+   ballArray[i] = ball;
+
+  }
+}
+}
+function checkCollisions() {
+  for(var i = 0; i < ballArray.length; i++){
+    ball = ballArray[i];
+    //if (ballArray[i].state = 0) {
+  //  alert("youWon")
+//  }
+   ctx.font = "30px sans-serif"  
+
+
+  // ctx.translate(ship.x,ship.y)
+if (missile.x*2 > ball.x && missile.x*2 < ball.x + ball.radius && missile.y*2 > ball.y && missile.y*2 < ball.y + ball.radius) {
+//ctx.fillText("collision", 150, 20);
+
+ball.color = grdFrenchFlag
+  //console.log(ship.x,ship.y,ball.x,ball.y)
+    ctx.strokeStyle = ctx.fillStyle = grdFrenchFlag;
+  ball.state = 0;
+missile.color = "black"
+//dead[i] = ball.state.value;  
+  //ballArray = ballArray.slice((ballArray.indexOf(ball)))
+}
+if (ship.x*2  > ball.x && ship.x*2 < ball.x+ball.radius && ship.y*2 > ball.y && ship.y*2 < ball.y+ball.radius){
+ctx.font = "100px sans-serif";
+ctx.fillText("game over", 150, 20)
+
+alert("you lose")
+document.location.reload();
+console.log("game over")
+
+}
+
+}
+}
+
+
+function updateBalls(delta) {
+   // for each ball in the array
+
+   for(var i=0; i < ballArray.length; i++) {
+     var ball = ballArray[i];
+     // 1) move the ball
+   if (ball.state ==  1) {
+   
+     // 2) test if the ball collides with a wall
+     testCollisionWithWalls(ball);
+
+     
+      checkCollisions();
+  
+ball.move();
+     // 3) draw the ball
+     ball.draw();
+  }
+};
+}
+ 
+function testCollisionWithWalls(ball) {
+  // left
+  if (ball.x < ball.radius) { // x and y of the ball are at the center of the circle
+    ball.x = ball.radius;     // if collision, we replace the ball at a position
+    ball.vx *= -1;            // where it's exactly in contact with the left border
+  }                           // and we reverse the horizontal speed
+  // right
+  if (ball.x > w - (ball.radius)) {
+    ball.x = w - (ball.radius);
+    ball.vx *= -1;
+  }
+  // up
+  if (ball.y < ball.radius) {
+    ball.y = ball.radius;
+    ball.vy *= -1;
+  }
+  // down
+  if (ball.y > (8.5*h/10) - (ball.radius)) {
+    ball.y = (8.5*h/10) - (ball.radius);
+    ball.vy *= -1;
+  }
+}
+
+		function createMissiles(nb) {
+			for(var i = 0;i < nb;i++){
+				var missile = new Missile();
+				missileArray[i] = missile;
+				var fire = true;
+			}
+			// body...
+		}
+		function updateMissile() {
+			for(var j = 0; j < missileArray.length;j++){
+				var missile = missileArray[j];
+
+				missile.move();
+
+
+  			missile.draw();
+			if (missile.y < 0) {
+				missileArray.length = 0;
+			}
+			//console.log(missileArray.length)
+      }
+		}
+		function clearCanvas() {
+			ctx.clearRect(0,0,w,h);// body...
+	ctx.fillStyle = "rgba(0,0,0,0.01)";
+  	}
+				function drawMyShip(x, y) {
+  ctx.save();
+  // Translate the coordinate system, draw relative to it
+ctx.translate(x, y);
+  
+  ctx.beginPath();
+
+  ctx.moveTo(x,y)
+
+  ctx.lineTo(x+5,y-5);
+
+  ctx.lineTo(x+10,y);
+
+  ctx.moveTo(x,y+5);
+  ctx.lineTo(x-15,y+20);
+  ctx.lineTo(x,y+20)
+  //
+  ctx.moveTo(x+10,y+5);
+  ctx.lineTo(x+25,y+20);
+  ctx.lineTo(x,y+20)
+  
+  ctx.moveTo(x,y+20);
+  ctx.lineTo(x+5,y+30);
+  ctx.lineTo(x+10,y+20)
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = grdFrenchFlag;
+  ctx.stroke();
+
+  ctx.strokeRect(x,y,10,20) 
+
+var x1 = ship.x - 20;
+var y1 = ship.y - 7;
+ctx.strokeStyle = "black";
+  ctx.strokeRect(x1,y1,50,38)
+  
+  ctx.restore();
+ };
+function Missile() {
+    	this.x = ship.x *2 -10;
+    	this.y = ship.y *2 -10;
+    	this.x2 = ship.x *2 + 15;
+    	this.y2 = ship.y *2 - 10;
+    	
+    	this.speed = 10;
+       
+    	this.draw = function() {
+    		ctx.beginPath();
+    	missile.color = ctx.fillStyle = grdFrenchFlag;
+    		ctx.fillRect(this.x,this.y,5,20);
+            ctx.fillRect(this.x2,this.y2,5,20);
+    	}
+    	this.move = function() {
+    		this.y -= this.speed
+    	    this.y2 -= this.speed
+    	
+      if(inputStates.space && inputStates.down){this.y += this.speed
+          this.y2 += this.speed
+      }
+      if(inputStates.space && inputStates.right){this.x2 += this.speed
+          this.x2 += this.speed
+      }
+      if(inputStates.space && inputStates.left){this.y2 += this.speed
+          this.y2 += this.speed
+      }
+      
+      }
+    	// body...dsf
+    }
+
+
+function walls() {
+	if (x1 < 0) {
+	 x1 = 0;
+	}
+	if ((x1 + 50) > w) {
+		x1  = w - 50 ;
+	console.log("collide")
+	}
+    if (y1 < 0) {
+		y1 = 0;
+	}
+	if ((y1 + 38) > h) {
+		y1 = h-38;
+	}
+
+	}
+		 function updateshipPosition() {
+  ship.speedX = ship.speedY = 0;
+  // Checks inputStates
+  if (inputStates.left) {
+    ctx.fillText("left", 150, 20);
+    ship.speedX = -ship.speed;
+  }
+  if (inputStates.up) {
+    ctx.fillText("up", 150, 40);
+    ship.speedY = -ship.speed;
+  }
+  if (inputStates.right) {
+    ctx.fillText("right", 150, 60);
+    ship.speedX = ship.speed;
+  }
+  if (inputStates.down) {
+    ctx.fillText("down", 150, 80);
+    ship.speedY = ship.speed;
+  }
+  if (inputStates.space) {
+     createMissiles(1)
+}
+  if (inputStates.mousedown) {
+    ship.speed = 5;
+  } else {
+  // Mouse up
+  ship.speed = 1;
+  }
+  ship.x += ship.speedX;
+  ship.y += ship.speedY;
+}
+		function updatePlayerPosition(){
+			ship.speedX = ship.speedY = 0;
+
+
+			if(inputStates.left) {
+          //  console.log('left');
+             ship.speedX = -ship.speed;
+		     } 	
+			if(inputStates.right) {
+             ship.speedX = ship.speed;
+			}
+		if (inputStates.up) {
+             ship.speedY = -ship.speed;
+			}
+		if (inputStates.down) {
+             ship.speedY = ship.speed;
+			}
+		if (inputStates.space) {
+        count = count + 1;
+        createMissiles()
+            }
+            if (!inputStates.space) {
+              missileArray.length = 0;
+            }
+              if ((x1) < 0) {
+	 x1 = 0;
+	}
+	if ((x1 + 50) > w) {
+		x1  = w - 50 ;
+	console.log("collide")
+	}
+    if (y1 < 0) {
+		y1 = 0;
+	}
+	if (y1 + 38 > h) {
+		y1 = h-38;
+	}
+  
+
+		ship.x += ship.speedX;
+		ship.y += ship.speedY;
+		}    
+
+  var measureFPS = function(newTime){
+   // test for the very first invocation
+   if(lastTime === undefined) {
+     lastTime = newTime;
+     return;
+   }
+   // calculate the delta between last & current frame
+   var delta = newTime - lastTime;
+   if (delta >= 1000) {
+     fps = frameCount;
+     frameCount = 0;
+     lastTime = newTime;
+   }
+   // and display it in an element we appended to the
+   // document in the start() function
+   fpsContainer.innerHTML = 'FPS: ' + fps;
+   frameCount++;
+};
+		
+	
+		var start = function() {
+			// body...
+		
+		
+		canvas = document.querySelector('#myCanvas');
+		ctx = canvas.getContext('2d');
+		w = canvas.width;
+		h = canvas.height;
+//        fpsContainer = document.createElement('div');
+		document.body.appendChild(fpsContainer);
+		
+		//drawMyPlayer()
+	createBalls(10);
+
+	window.addEventListener('keydown', function(event){
+      if (event.keyCode === 37) {
+      	inputStates.left = true;
+      	//console.log('inputStates.left')
+      }
+	  else if (event.keyCode === 38) { 
+      inputStates.up = true;
+	  }
+	  else if (event.keyCode === 39) {
+		inputStates.right = true;
+	  }
+	  else if (event.keyCode === 40) {
+			inputStates.down = true;
+	  }
+	   else if (event.keyCode === 32) {
+				inputStates.space = true;
+	  }
+	  }, false);
+	window.addEventListener('keyup', function(event) {
+      if (event.keyCode === 37) {
+      	inputStates.left = false;
+      }
+	  else if (event.keyCode === 38) { 
+      inputStates.up = false;
+	  }
+	else if (event.keyCode === 39) {
+		inputStates.right = false;
+	}
+		else if (event.keyCode === 40) {
+			inputStates.down = false;
+		}
+			else if (event.keyCode === 32) {
+				inputStates.space = false;
+			}
+	}, false)
+	
+
+	requestAnimationFrame(mainloop)
+  }
+    return {
+   start:start
+}
+
+}
+</script>
+
+</head>
+<body>
+ <div>
+ 	<h4>A spaceShip game using HTML5 </h4>
+ <canvas id="myCanvas" width="500" height="500">
+	your browser does not support the canvas api
+ </canvas>
+ <div id="fpsContainer"></div>
+ </div>
+<div>	
+</div>
+</body>
+</html>
